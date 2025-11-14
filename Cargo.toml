@@ -40,12 +40,13 @@ path = "src/main.rs"
 
 [[example]]
 name = "basic_encryption"
-path = "examples/basic_encryption.rs"
+path = "examples/basic_enc.rs"
 
 [[example]]
 name = "file_encryption"
-path = "examples/file_encryption.rs"
+path = "examples/file_enc.rs"
 
 [[example]]
 name = "key_generation"
-path = "examples/key_generation.rs"
+
+path = "examples/key_gen.rs"
