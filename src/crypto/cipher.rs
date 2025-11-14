@@ -7,6 +7,7 @@ use chacha20poly1305::{ChaCha20Poly1305, Key as ChaChaKey};
 use anyhow::{Result, anyhow};
 use std::sync::Arc;
 use zeroize::Zeroize;
+use sha3::{Sha3_256, Digest};
 
 #[derive(Debug, Clone, Copy)]
 pub enum CipherAlgorithm {
@@ -17,11 +18,29 @@ pub enum CipherAlgorithm {
 pub struct QuantumCipher {
     engine: Arc<QuantumCryptoEngine>,
     algorithm: CipherAlgorithm,
+    master_key: Option<Vec<u8>>,
 }
 
 impl QuantumCipher {
     pub fn new(engine: Arc<QuantumCryptoEngine>, algorithm: CipherAlgorithm) -> Self {
-        Self { engine, algorithm }
+        Self { 
+            engine, 
+            algorithm,
+            master_key: None,
+        }
+    }
+    
+    pub fn with_password(engine: Arc<QuantumCryptoEngine>, algorithm: CipherAlgorithm, password: &str) -> Result<Self> {
+        let mut hasher = Sha3_256::new();
+        hasher.update(password.as_bytes());
+        hasher.update(b"quantum_crypto_engine_v1");
+        let master_key = hasher.finalize().to_vec();
+        
+        Ok(Self { 
+            engine, 
+            algorithm,
+            master_key: Some(master_key),
+        })
     }
     
     pub fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>> {
@@ -38,9 +57,22 @@ impl QuantumCipher {
         }
     }
     
+    fn derive_key(&self, nonce: &[u8]) -> Result<Vec<u8>> {
+        if let Some(master_key) = &self.master_key {
+            let mut hasher = Sha3_256::new();
+            hasher.update(master_key);
+            hasher.update(nonce);
+            hasher.update(b"encryption_key");
+            Ok(hasher.finalize().to_vec())
+        } else {
+            self.engine.extract_key_material(32)
+        }
+    }
+    
     fn encrypt_aes(&self, plaintext: &[u8]) -> Result<Vec<u8>> {
-        let mut key_material = self.engine.extract_key_material(32)?;
         let mut nonce_material = self.engine.extract_key_material(12)?;
+        
+        let mut key_material = self.derive_key(&nonce_material)?;
         
         let cipher = Aes256Gcm::new_from_slice(&key_material)
             .map_err(|e| anyhow!("Failed to create cipher: {}", e))?;
@@ -65,16 +97,17 @@ impl QuantumCipher {
             return Err(anyhow!("Invalid ciphertext format"));
         }
         
-        let mut key_material = self.engine.extract_key_material(32)?;
         let nonce_bytes = &data[1..13];
         let ciphertext = &data[13..];
+        
+        let mut key_material = self.derive_key(nonce_bytes)?;
         
         let cipher = Aes256Gcm::new_from_slice(&key_material)
             .map_err(|e| anyhow!("Failed to create cipher: {}", e))?;
         let nonce = Nonce::from_slice(nonce_bytes);
         
         let plaintext = cipher.decrypt(nonce, ciphertext)
-            .map_err(|e| anyhow!("Decryption failed: {}", e))?;
+            .map_err(|e| anyhow!("Decryption failed: {}. Wrong password?", e))?;
         
         key_material.zeroize();
         
@@ -82,8 +115,8 @@ impl QuantumCipher {
     }
     
     fn encrypt_chacha(&self, plaintext: &[u8]) -> Result<Vec<u8>> {
-        let mut key_material = self.engine.extract_key_material(32)?;
         let mut nonce_material = self.engine.extract_key_material(12)?;
+        let mut key_material = self.derive_key(&nonce_material)?;
         
         let key = ChaChaKey::from_slice(&key_material);
         let cipher = ChaCha20Poly1305::new(key);
@@ -108,16 +141,17 @@ impl QuantumCipher {
             return Err(anyhow!("Invalid ciphertext format"));
         }
         
-        let mut key_material = self.engine.extract_key_material(32)?;
         let nonce_bytes = &data[1..13];
         let ciphertext = &data[13..];
+        
+        let mut key_material = self.derive_key(nonce_bytes)?;
         
         let key = ChaChaKey::from_slice(&key_material);
         let cipher = ChaCha20Poly1305::new(key);
         let nonce = chacha20poly1305::Nonce::from_slice(nonce_bytes);
         
         let plaintext = cipher.decrypt(nonce, ciphertext)
-            .map_err(|e| anyhow!("Decryption failed: {}", e))?;
+            .map_err(|e| anyhow!("Decryption failed: {}. Wrong password?", e))?;
         
         key_material.zeroize();
         
