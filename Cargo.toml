@@ -1,6 +1,6 @@
 [package]
-name = "quantum-crypto-engine"
-version = "0.1.0"
+name = "Noisium"
+version = "0.1.1"
 edition = "2021"
 authors = ["CPScript"]
 description = "Cryptography engine using quantum entropy from webcam sensors"
@@ -35,7 +35,7 @@ panic = "abort"
 strip = true
 
 [[bin]]
-name = "qce"
+name = "noisium"
 path = "src/main.rs"
 
 [[example]]
@@ -48,5 +48,4 @@ path = "examples/file_enc.rs"
 
 [[example]]
 name = "key_generation"
-
 path = "examples/key_gen.rs"
