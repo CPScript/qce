@@ -1,11 +1,11 @@
-use quantum_crypto_engine::*;
+use Noisium::*;
 use clap::{Parser, Subcommand};
 use std::sync::Arc;
 use std::fs;
 use std::io::{Read, Write};
 
 #[derive(Parser)]
-#[command(author, version, about = "Quantum Cryptography Engine using webcam entropy")]
+#[command(author, version, about = "Noisium | Quantum Cryptography Engine, using webcam entropy")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
