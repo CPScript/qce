@@ -2,7 +2,7 @@ use quantum_crypto_engine::*;
 use std::sync::Arc;
 
 fn main() -> anyhow::Result<()> {
-    println!("Quantum Cryptography Engine - Basic Encryption Example\n");
+    println!("Noisium | Quantum Cryptography Engine - Basic Encryption Example\n");
     
     println!("Initializing quantum entropy collection from webcam...");
     let mut engine = QuantumCryptoEngine::new(8192)?;
