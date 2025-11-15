@@ -1,4 +1,4 @@
-# Quantum Cryptography Engine
+# Noisium
 
 A cryptography engine that uses quantum entropy from consumer webcam CMOS sensors. Unlike algorithmic PRNGs, this system extracts randomness from quantum shot noise and thermal fluctuations in semiconductor physics.
 
@@ -41,8 +41,8 @@ sudo pacman -S opencv clang alsa-lib
 ### Build
 
 ```bash
-git clone https://github.com/CPScript/qce.git
-cd qce
+git clone https://github.com/CPScript/Noisium.git
+cd Noisium
 cargo build --release
 ```
 
@@ -66,7 +66,7 @@ cargo run --example key_gen
 #### |> Encrypt a File
 
 ```bash
-./target/release/qce encrypt \
+./target/release/Noisium encrypt \
   --input plaintext.txt \
   --output encrypted.bin \
   --algorithm aes256 \
@@ -76,7 +76,7 @@ cargo run --example key_gen
 #### |> Decrypt a File
 
 ```bash
-./target/release/qce decrypt \
+./target/release/Noisium decrypt \
   --input encrypted.bin \
   --output decrypted.txt \
   --source webcam
@@ -85,7 +85,7 @@ cargo run --example key_gen
 #### |> Generate Cryptographic Key
 
 ```bash
-./target/release/qce generate-key \
+./target/release/Noisium generate-key \
   --output master.key \
   --length 32 \
   --source webcam
@@ -94,7 +94,7 @@ cargo run --example key_gen
 #### |> Monitor Entropy Quality
 
 ```bash
-./target/release/qce status \
+./target/release/Noisium status \
   --source webcam \
   --duration 30
 ```
@@ -149,7 +149,7 @@ The engine includes statistical testing:
 cargo test
 
 # Generate entropy samples for external analysis
-./target/release/qce generate-key --output test.bin --length 1000000
+./target/release/Noisium generate-key --output test.bin --length 1000000
 
 # Test with dieharder suite
 dieharder -a -f test.bin
@@ -183,7 +183,7 @@ Based on principles from:
 
 <div align="center">
 
-[MIT License](https://github.com/CPScript/qce/blob/main/LICENSE)
+[MIT License](https://github.com/CPScript/Noisium/blob/main/LICENSE)
 
 Developers & Contributers; [CPScript](https://github.com/CPScript)
 
